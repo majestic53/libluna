@@ -24,8 +24,13 @@ namespace LUNA {
 
 	namespace COMP {
 
+		#define DISPLAY_CONFIG_DEF_FLAGS SDL_WINDOW_OPENGL
+
 		#define DISPLAY_CONFIG_DEF_HEIGHT 480
 		#define DISPLAY_CONFIG_DEF_WIDTH 640
+
+		#define DISPLAY_CONFIG_DEF_X SDL_WINDOWPOS_CENTERED
+		#define DISPLAY_CONFIG_DEF_Y SDL_WINDOWPOS_CENTERED
 
 		#define DISPLAY_CONFIG_DEF_TITLE "Untitled Window"
 
@@ -37,9 +42,9 @@ namespace LUNA {
 					__in_opt const std::string &title = DISPLAY_CONFIG_DEF_TITLE,
 					__in_opt size_t width = DISPLAY_CONFIG_DEF_WIDTH,
 					__in_opt size_t height = DISPLAY_CONFIG_DEF_HEIGHT,
-					__in_opt size_t x = SDL_WINDOWPOS_CENTERED,
-					__in_opt size_t y = SDL_WINDOWPOS_CENTERED,
-					__in_opt uint32_t flags = SDL_WINDOW_OPENGL
+					__in_opt size_t x = DISPLAY_CONFIG_DEF_X,
+					__in_opt size_t y = DISPLAY_CONFIG_DEF_Y,
+					__in_opt uint32_t flags = DISPLAY_CONFIG_DEF_FLAGS
 					);
 
 				_luna_display_config(
