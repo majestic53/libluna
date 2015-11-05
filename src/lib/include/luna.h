@@ -36,10 +36,26 @@ using namespace LUNA;
 #endif // COMP
 
 #include "luna_display.h"
+#include "luna_input.h"
 
 using namespace LUNA::COMP;
 
 namespace LUNA {
+
+	typedef enum {
+		LUNA_EVT_SETUP = 0,
+		LUNA_EVT_START,
+		LUNA_EVT_STOP,
+		LUNA_EVT_TEARDOWN,
+	} luna_evt_t;
+
+	#define LUNA_EVT_MAX LUNA_EVT_TEARDOWN
+
+	typedef void (*luna_evt_cb)(
+		__in void *
+		);
+
+	typedef std::map<luna_evt_t, std::pair<luna_evt_cb, void *>> luna_config;
 
 	typedef class _luna {
 
@@ -51,6 +67,8 @@ namespace LUNA {
 
 			luna_display_ptr acquire_display(void);
 
+			luna_input_ptr acquire_input(void);
+
 			void initialize(void);
 
 			static bool is_allocated(void);
@@ -60,7 +78,9 @@ namespace LUNA {
 			bool is_running(void);
 
 			void start(
-				__in const luna_display_config &config
+				__in const luna_config &config,
+				__in const luna_display_config &display_config,
+				__in const luna_input_config &input_config
 				);
 
 			void stop(void);
@@ -91,8 +111,14 @@ namespace LUNA {
 
 			static void external_uninitialize(void);
 
+			void invoke(
+				__in luna_evt_t type
+				);
+
 			void setup(
-				__in const luna_display_config &config
+				__in const luna_config &config,
+				__in const luna_display_config &display_config,
+				__in const luna_input_config &input_config
 				);
 
 			void teardown(void);
@@ -103,7 +129,11 @@ namespace LUNA {
 
 			static _luna *m_instance;
 
+			luna_config m_config;
+
 			luna_display_ptr m_instance_display;
+
+			luna_input_ptr m_instance_input;
 
 			bool m_running;
 

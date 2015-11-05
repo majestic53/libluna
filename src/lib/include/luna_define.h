@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 
@@ -71,7 +72,7 @@ namespace LUNA {
 
 	#define VERSION_MAJ 0
 	#define VERSION_MIN 1
-	#define VERSION_REV 1
+	#define VERSION_REV 2
 	#define VERSION_TICK 1545
 }
 

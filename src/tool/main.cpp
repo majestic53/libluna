@@ -19,6 +19,59 @@
 
 #include "../lib/include/luna.h"
 
+#define WINDOW_WIDTH 640
+#define WINDOW_HEIGHT 480
+#define WINDOW_TITLE "Luna [" STRING_CAT(WINDOW_WIDTH) "x" STRING_CAT(WINDOW_HEIGHT) "]"
+
+luna_input_evt 
+keydown_handler(
+	__in const SDL_Event &event,
+	__in void *context
+	)
+{
+	luna_input_evt result = LUNA_INPUT_EVT_NONE;
+
+	std::cout << "KEYDOWN: 0x" << SCALAR_AS_HEX(uint32_t, event.key.keysym.sym) << std::endl;
+
+	if(event.key.keysym.sym == SDLK_ESCAPE) {
+		result = LUNA_INPUT_EVT_QUIT;
+	}
+
+	return result;
+}
+
+void 
+on_setup(
+	__in void *context
+	)
+{
+	std::cout << "SETUP: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+}
+
+void 
+on_start(
+	__in void *context
+	)
+{
+	std::cout << "START: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+}
+
+void 
+on_stop(
+	__in void *context
+	)
+{
+	std::cout << "STOP: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+}
+
+void 
+on_teardown(
+	__in void *context
+	)
+{
+	std::cout << "TEARDOWN: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+}
+
 int 
 main(void)
 {
@@ -32,7 +85,23 @@ main(void)
 		inst->initialize();
 
 		// TODO
-		inst->start(luna_display_config("Test Window", 640, 480));
+		luna_config config;
+		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_SETUP, 
+			std::pair<luna_evt_cb, void *>(on_setup, NULL)));
+		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_START, 
+			std::pair<luna_evt_cb, void *>(on_start, NULL)));
+		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_STOP, 
+			std::pair<luna_evt_cb, void *>(on_stop, NULL)));
+		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_TEARDOWN, 
+			std::pair<luna_evt_cb, void *>(on_teardown, NULL)));
+
+		luna_display_config disp_config(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
+		
+		luna_input_config input_config;
+		input_config.insert(std::pair<SDL_EventType, std::pair<luna_input_cb, void *>>(SDL_KEYDOWN, 
+			std::pair<luna_input_cb, void *>(keydown_handler, NULL)));
+
+		inst->start(config, disp_config, input_config);
 		// ---
 
 		inst->uninitialize();

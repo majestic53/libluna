@@ -31,6 +31,7 @@ namespace LUNA {
 	_luna::_luna(void) :
 		m_initialized(false),
 		m_instance_display(luna_display::acquire()),
+		m_instance_input(luna_input::acquire()),
 		m_running(false)
 	{
 		std::atexit(luna::_delete);
@@ -81,6 +82,17 @@ namespace LUNA {
 		return m_instance_display;
 	}
 
+	luna_input_ptr 
+	_luna::acquire_input(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_input;
+	}
+
 	void 
 	_luna::external_initialize(void)
 	{
@@ -111,6 +123,7 @@ namespace LUNA {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_INITIALIZED);
 		}
 
+		m_instance_input->initialize();
 		m_instance_display->initialize();
 
 		// TODO: initialize components
@@ -137,8 +150,27 @@ namespace LUNA {
 	}
 
 	void 
+	_luna::invoke(
+		__in luna_evt_t type
+		)
+	{
+		luna_config::iterator iter;
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		iter = m_config.find(type);
+		if((iter != m_config.end()) && iter->second.first) {
+			iter->second.first(iter->second.second);
+		}
+	}
+
+	void 
 	_luna::start(
-		__in const luna_display_config &config
+		__in const luna_config &config,
+		__in const luna_display_config &display_config,
+		__in const luna_input_config &input_config
 		)
 	{
 		uint32_t tick;
@@ -152,9 +184,11 @@ namespace LUNA {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_STARTED);
 		}
 		
-		setup(config);
+		setup(config, display_config, input_config);
 
-		m_running = true;
+		m_running = true;		
+		invoke(LUNA_EVT_START);
+
 		while(m_running) {
 			tick = SDL_GetTicks();
 
@@ -164,8 +198,16 @@ namespace LUNA {
 					case SDL_QUIT:
 						stop();
 						break;
+					default:
 
-					// TODO: handle input
+						switch(m_instance_input->handle(event)) {
+							case LUNA_INPUT_EVT_QUIT:
+								stop();
+								break;
+							default:
+								break;
+						}
+						break;
 				}
 			}
 
@@ -183,7 +225,9 @@ namespace LUNA {
 
 	void 
 	_luna::setup(
-		__in const luna_display_config &config
+		__in const luna_config &config,
+		__in const luna_display_config &display_config,
+		__in const luna_input_config &input_config
 		)
 	{
 
@@ -192,9 +236,13 @@ namespace LUNA {
 		}
 
 		luna::external_initialize();
-		m_instance_display->start(config);
+		m_instance_input->set(input_config);
+		m_instance_display->start(display_config);
 
 		// TODO: setup components
+
+		m_config = config;
+		invoke(LUNA_EVT_SETUP);
 	}
 
 	void 
@@ -208,7 +256,8 @@ namespace LUNA {
 		if(!m_running) {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_STOPPED);
 		}
-
+		
+		invoke(LUNA_EVT_STOP);
 		m_running = false;
 	}
 
@@ -219,10 +268,14 @@ namespace LUNA {
 		if(!m_initialized) {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
 		}
+		
+		invoke(LUNA_EVT_TEARDOWN);
+		m_config.clear();
 
 		// TODO: teardown components
 
 		m_instance_display->stop();
+		m_instance_input->clear();
 		luna::external_uninitialize();
 	}
 
@@ -243,7 +296,8 @@ namespace LUNA {
 		result << ")";
 
 		if(m_initialized) {
-			result << std::endl << m_instance_display->to_string(verbose);
+			result << std::endl << m_instance_display->to_string(verbose)
+				<< std::endl << m_instance_input->to_string(verbose);
 
 			// TODO: print components
 
@@ -269,6 +323,7 @@ namespace LUNA {
 		// TODO: uninitialize components
 
 		m_instance_display->uninitialize();
+		m_instance_input->uninitialize();
 	}
 
 	std::string 

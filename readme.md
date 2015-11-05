@@ -13,6 +13,11 @@ Changelog
 =========
 
 ##Version 0.1.1545
+*Updated:11/4/2015*
+
+* Added input manager
+* Added event callback support
+
 *Updated:11/3/2015*
 
 * Initial commit
