@@ -60,6 +60,9 @@ namespace LUNA {
 			THROW_EXCEPTION_FORMAT(LUNA_INPUT_EXCEPTION_STRING(_EXCEPT_), \
 			_FORMAT_, __VA_ARGS__)
 
+		class _luna_input_config;
+		typedef _luna_input_config luna_input_config, *luna_input_config_ptr;
+
 		class _luna_input;
 		typedef _luna_input luna_input, *luna_input_ptr;
 	}

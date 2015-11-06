@@ -43,19 +43,71 @@ using namespace LUNA::COMP;
 namespace LUNA {
 
 	typedef enum {
-		LUNA_EVT_SETUP = 0,
+		LUNA_EVT_DRAW = 0,
+		LUNA_EVT_SETUP,
 		LUNA_EVT_START,
 		LUNA_EVT_STOP,
 		LUNA_EVT_TEARDOWN,
+		LUNA_EVT_TICK,
 	} luna_evt_t;
 
-	#define LUNA_EVT_MAX LUNA_EVT_TEARDOWN
+	#define LUNA_EVT_MAX LUNA_EVT_TICK
 
 	typedef void (*luna_evt_cb)(
 		__in void *
 		);
 
-	typedef std::map<luna_evt_t, std::pair<luna_evt_cb, void *>> luna_config;
+	typedef class _luna_config {
+
+		public:
+
+			_luna_config(void);
+
+			_luna_config(
+				__in const _luna_config &other
+				);
+
+			virtual ~_luna_config(void);
+
+			_luna_config &operator=(
+				__in const _luna_config &other
+				);
+
+			void add(
+				__in luna_evt_t type,
+				__in luna_evt_cb callback,
+				__in_opt void *context = NULL
+				);
+
+			void clear(void);
+
+			bool contains(
+				__in luna_evt_t type
+				);
+
+			void invoke(
+				__in luna_evt_t type
+				);
+
+			void remove(
+				__in luna_evt_t type
+				);
+
+			size_t size(void);
+
+			virtual std::string to_string(
+				__in_opt bool verbose = false
+				);
+
+		protected:
+
+			std::map<luna_evt_t, std::pair<luna_evt_cb, void *>>::iterator find(
+				__in luna_evt_t type
+				);
+
+			std::map<luna_evt_t, std::pair<luna_evt_cb, void *>> m_config;
+
+	} luna_config, *luna_config_ptr;
 
 	typedef class _luna {
 
@@ -69,13 +121,39 @@ namespace LUNA {
 
 			luna_input_ptr acquire_input(void);
 
+			void add(
+				__in luna_evt_t type,
+				__in luna_evt_cb callback,
+				__in_opt void *context = NULL
+				);
+
+			void clear(void);
+
+			bool contains(
+				__in luna_evt_t type
+				);
+
 			void initialize(void);
+
+			void invoke(
+				__in luna_evt_t type
+				);
 
 			static bool is_allocated(void);
 
 			bool is_initialized(void);
 
 			bool is_running(void);
+
+			void remove(
+				__in luna_evt_t type
+				);
+
+			void set(
+				__in const luna_config &config
+				);
+
+			size_t size(void);
 
 			void start(
 				__in const luna_config &config,
@@ -111,10 +189,6 @@ namespace LUNA {
 
 			static void external_uninitialize(void);
 
-			void invoke(
-				__in luna_evt_t type
-				);
-
 			void setup(
 				__in const luna_config &config,
 				__in const luna_display_config &display_config,
@@ -136,6 +210,8 @@ namespace LUNA {
 			luna_input_ptr m_instance_input;
 
 			bool m_running;
+
+			uint32_t m_tick;
 
 	} luna, *luna_ptr;
 }

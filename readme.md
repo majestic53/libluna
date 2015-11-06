@@ -13,6 +13,10 @@ Changelog
 =========
 
 ##Version 0.1.1545
+*Updated:11/5/2015*
+
+* Added configuration classes
+
 *Updated:11/4/2015*
 
 * Added input manager

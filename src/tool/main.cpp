@@ -40,6 +40,27 @@ keydown_handler(
 	return result;
 }
 
+luna_input_evt 
+window_handler(
+	__in const SDL_Event &event,
+	__in void *context
+	)
+{
+	luna_input_evt result = LUNA_INPUT_EVT_NONE;
+
+	std::cout << "WIN_CHANGE: 0x" << SCALAR_AS_HEX(uint32_t, event.window.event) << std::endl;
+
+	return result;
+}
+
+void 
+on_draw(
+	__in void *context
+	)
+{
+	std::cout << "DRAW: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+}
+
 void 
 on_setup(
 	__in void *context
@@ -72,6 +93,14 @@ on_teardown(
 	std::cout << "TEARDOWN: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
 }
 
+void 
+on_tick(
+	__in void *context
+	)
+{
+	std::cout << "TICK: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+}
+
 int 
 main(void)
 {
@@ -86,20 +115,18 @@ main(void)
 
 		// TODO
 		luna_config config;
-		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_SETUP, 
-			std::pair<luna_evt_cb, void *>(on_setup, NULL)));
-		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_START, 
-			std::pair<luna_evt_cb, void *>(on_start, NULL)));
-		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_STOP, 
-			std::pair<luna_evt_cb, void *>(on_stop, NULL)));
-		config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(LUNA_EVT_TEARDOWN, 
-			std::pair<luna_evt_cb, void *>(on_teardown, NULL)));
+		config.add(LUNA_EVT_DRAW, on_draw);
+		config.add(LUNA_EVT_SETUP, on_setup);
+		config.add(LUNA_EVT_START, on_start);
+		config.add(LUNA_EVT_STOP, on_stop);
+		config.add(LUNA_EVT_TEARDOWN, on_teardown);
+		config.add(LUNA_EVT_TICK, on_tick);
 
 		luna_display_config disp_config(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 		
 		luna_input_config input_config;
-		input_config.insert(std::pair<SDL_EventType, std::pair<luna_input_cb, void *>>(SDL_KEYDOWN, 
-			std::pair<luna_input_cb, void *>(keydown_handler, NULL)));
+		input_config.add(SDL_KEYDOWN, keydown_handler);
+		input_config.add(SDL_WINDOWEVENT, window_handler);
 
 		inst->start(config, disp_config, input_config);
 		// ---

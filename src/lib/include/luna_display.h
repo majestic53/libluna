@@ -54,6 +54,8 @@ namespace LUNA {
 					__in const _luna_display_config &other
 					);
 
+				void clear(void);
+
 				uint32_t &flags(void);
 
 				size_t &height(void);
@@ -88,6 +90,8 @@ namespace LUNA {
 
 				static _luna_display *acquire(void);
 
+				void clear(void);
+
 				void initialize(void);
 
 				static bool is_allocated(void);
@@ -95,6 +99,10 @@ namespace LUNA {
 				bool is_initialized(void);
 
 				bool is_running(void);
+
+				void set(
+					__in const luna_display_config &config
+					);
 
 				void start(
 					__in const luna_display_config &config

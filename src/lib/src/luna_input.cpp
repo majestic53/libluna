@@ -24,6 +24,147 @@ namespace LUNA {
 
 	namespace COMP {
 
+		_luna_input_config::_luna_input_config(void)
+		{
+			return;
+		}
+
+		_luna_input_config::_luna_input_config(
+			__in const _luna_input_config &other
+			) :
+				m_config(other.m_config)
+		{
+			return;
+		}
+
+		_luna_input_config::~_luna_input_config(void)
+		{
+			return;
+		}
+
+		_luna_input_config &
+		_luna_input_config::operator=(
+			__in const _luna_input_config &other
+			)
+		{
+
+			if(this != &other) {
+				m_config = other.m_config;
+			}
+
+			return *this;
+		}
+
+		void 
+		_luna_input_config::add(
+			__in const SDL_EventType &type,
+			__in luna_input_cb callback,
+			__in_opt void *context
+			)
+		{
+			std::map<SDL_EventType, std::pair<luna_input_cb, void *>>::iterator iter;
+
+			if(!callback) {
+				THROW_LUNA_INPUT_EXCEPTION_FORMAT(LUNA_INPUT_EXCEPTION_INVALID,
+					"0x%x", type);
+			}
+
+			iter = m_config.find(type);
+			if(iter == m_config.end()) {
+				m_config.insert(std::pair<SDL_EventType, std::pair<luna_input_cb, void *>>(
+					type, std::pair<luna_input_cb, void *>(callback, context)));
+			} else {
+				iter->second.first = callback;
+				iter->second.second = context;
+			}
+		}
+
+		void 
+		_luna_input_config::clear(void)
+		{
+			m_config.clear();
+		}
+
+		bool 
+		_luna_input_config::contains(
+			__in SDL_EventType type
+			)
+		{
+			return (m_config.find(type) != m_config.end());
+		}
+
+		std::map<SDL_EventType, std::pair<luna_input_cb, void *>>::iterator 
+		_luna_input_config::find(
+			__in const SDL_EventType &type
+			)
+		{
+			std::map<SDL_EventType, std::pair<luna_input_cb, void *>>::iterator result;
+
+			result = m_config.find(type);
+			if(result == m_config.end()) {
+				THROW_LUNA_INPUT_EXCEPTION_FORMAT(LUNA_INPUT_EXCEPTION_NOT_FOUND,
+					"0x%x", type);
+			}
+
+			return result;
+		}
+
+		luna_input_evt 
+		_luna_input_config::handle(
+			__in const SDL_Event &event
+			)
+		{
+			luna_input_evt result = LUNA_INPUT_EVT_NONE;
+			std::map<SDL_EventType, std::pair<luna_input_cb, void *>>::iterator iter;
+
+			iter = m_config.find((SDL_EventType) event.type);
+			if(iter != m_config.end()) {
+				result = iter->second.first(event, iter->second.second);
+			} else {
+				result = LUNA_INPUT_EVT_UNSUPPORTED;	
+			}
+
+			return result;
+		}
+
+		void 
+		_luna_input_config::remove(
+			__in const SDL_EventType &type
+			)
+		{
+			m_config.erase(find(type));
+		}
+
+		size_t 
+		_luna_input_config::size(void)
+		{
+			return m_config.size();
+		}
+
+		std::string 
+		_luna_input_config::to_string(
+			__in_opt bool verbose
+			)
+		{
+			std::stringstream result;
+			std::map<SDL_EventType, std::pair<luna_input_cb, void *>>::iterator iter;
+
+			UNREFERENCE_PARAM(verbose);
+
+			for(iter = m_config.begin(); iter != m_config.end(); ++iter) {
+
+				if(iter != m_config.begin()) {
+					result << std::endl;
+				}
+
+				result << "--- (0x" << SCALAR_AS_HEX(SDL_EventType, iter->first)
+					<< ") 0x" << SCALAR_AS_HEX(luna_input_cb, iter->second.first)
+					<< ", 0x" << SCALAR_AS_HEX(void *, iter->second.second);
+			}
+
+			return result.str();
+		}
+
 		_luna_input *_luna_input::m_instance = NULL;
 
 		_luna_input::_luna_input(void) :
@@ -72,25 +213,11 @@ namespace LUNA {
 			__in_opt void *context
 			)
 		{
-			luna_input_config::iterator result;
-
 			if(!m_initialized) {
 				THROW_LUNA_INPUT_EXCEPTION(LUNA_INPUT_EXCEPTION_UNINITIALIZED);
 			}
 
-			if(!callback) {
-				THROW_LUNA_INPUT_EXCEPTION_FORMAT(LUNA_INPUT_EXCEPTION_INVALID,
-					"0x%x", type);
-			}
-
-			result = m_config.find(type);
-			if(result == m_config.end()) {
-				m_config.insert(std::pair<SDL_EventType, std::pair<luna_input_cb, void *>>(
-					type, std::pair<luna_input_cb, void *>(callback, context)));
-			} else {
-				result->second.first = callback;
-				result->second.second = context;
-			}
+			m_config.add(type, callback, context);
 		}
 
 		void 
@@ -114,27 +241,7 @@ namespace LUNA {
 				THROW_LUNA_INPUT_EXCEPTION(LUNA_INPUT_EXCEPTION_UNINITIALIZED);
 			}
 
-			return (m_config.find(type) != m_config.end());
-		}
-
-		luna_input_config::iterator 
-		_luna_input::find(
-			__in const SDL_EventType &type
-			)
-		{
-			luna_input_config::iterator result;
-
-			if(!m_initialized) {
-				THROW_LUNA_INPUT_EXCEPTION(LUNA_INPUT_EXCEPTION_UNINITIALIZED);
-			}
-
-			result = m_config.find(type);
-			if(result != m_config.end()) {
-				THROW_LUNA_INPUT_EXCEPTION_FORMAT(LUNA_INPUT_EXCEPTION_NOT_FOUND, 
-					"0x%x", type);
-			}
-
-			return result;
+			return m_config.contains(type);
 		}
 
 		luna_input_evt 
@@ -142,21 +249,12 @@ namespace LUNA {
 			__in const SDL_Event &event
 			)
 		{
-			luna_input_config::iterator iter;
-			luna_input_evt result = LUNA_INPUT_EVT_NONE;
 
 			if(!m_initialized) {
 				THROW_LUNA_INPUT_EXCEPTION(LUNA_INPUT_EXCEPTION_UNINITIALIZED);
 			}
 
-			iter = m_config.find((SDL_EventType) event.type);
-			if(iter != m_config.end()) {
-				result = iter->second.first(event, iter->second.second);
-			} else {
-				result = LUNA_INPUT_EVT_UNSUPPORTED;	
-			}
-
-			return result;
+			return m_config.handle(event);
 		}
 
 		void 
@@ -193,7 +291,7 @@ namespace LUNA {
 				THROW_LUNA_INPUT_EXCEPTION(LUNA_INPUT_EXCEPTION_UNINITIALIZED);
 			}
 
-			m_config.erase(find(type));
+			m_config.remove(type);
 		}
 
 		void 
@@ -201,17 +299,12 @@ namespace LUNA {
 			__in const luna_input_config &config
 			)
 		{
-			luna_input_config::const_iterator iter;
 
 			if(!m_initialized) {
 				THROW_LUNA_INPUT_EXCEPTION(LUNA_INPUT_EXCEPTION_UNINITIALIZED);
 			}
 
-			clear();
-
-			for(iter = config.begin(); iter != config.end(); ++iter) {
-				add(iter->first, iter->second.first, iter->second.second);
-			}
+			m_config = config;
 		}
 
 		size_t 
@@ -231,7 +324,6 @@ namespace LUNA {
 			)
 		{
 			std::stringstream result;
-			luna_input_config::iterator iter;
 
 			result << LUNA_INPUT_HEADER << " (" << (m_initialized ? "INIT" : "UNINIT");
 
@@ -242,13 +334,7 @@ namespace LUNA {
 			result << ")";
 
 			if(m_initialized) {
-
-				for(iter = m_config.begin(); iter != m_config.end(); 
-						++iter) {
-					result << std::endl << "--- (0x" << SCALAR_AS_HEX(SDL_EventType, iter->first)
-						<< "), 0x" << SCALAR_AS_HEX(luna_input_cb, iter->second.first)
-						<< ", 0x" << SCALAR_AS_HEX(void *, iter->second.second);
-				}
+				result << std::endl << m_config.to_string(verbose);
 			}
 
 			return result.str();

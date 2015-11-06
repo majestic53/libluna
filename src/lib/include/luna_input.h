@@ -35,7 +35,57 @@ namespace LUNA {
 			__in void *
 			);
 
-		typedef std::map<SDL_EventType, std::pair<luna_input_cb, void *>> luna_input_config;
+		typedef class _luna_input_config {
+			
+			public:
+
+				_luna_input_config(void);
+
+				_luna_input_config(
+					__in const _luna_input_config &other
+					);
+
+				virtual ~_luna_input_config(void);
+
+				_luna_input_config &operator=(
+					__in const _luna_input_config &other
+					);
+
+				void add(
+					__in const SDL_EventType &type,
+					__in luna_input_cb callback,
+					__in_opt void *context = NULL
+					);
+
+				void clear(void);
+
+				bool contains(
+					__in SDL_EventType type
+					);
+
+				luna_input_evt handle(
+					__in const SDL_Event &event
+					);
+
+				void remove(
+					__in const SDL_EventType &type
+					);
+
+				size_t size(void);
+
+				virtual std::string to_string(
+					__in_opt bool verbose = false
+					);
+
+			protected:
+
+				std::map<SDL_EventType, std::pair<luna_input_cb, void *>>::iterator find(
+					__in const SDL_EventType &type
+					);
+
+				std::map<SDL_EventType, std::pair<luna_input_cb, void *>> m_config;
+
+		} luna_input_config, *luna_input_config_ptr;
 
 		typedef class _luna_input {
 
@@ -96,10 +146,6 @@ namespace LUNA {
 					);
 
 				static void _delete(void);
-
-				luna_input_config::iterator find(
-					__in const SDL_EventType &type
-					);
 
 				luna_input_config m_config;
 

@@ -78,6 +78,17 @@ namespace LUNA {
 			return *this;
 		}
 
+		void 
+		_luna_display_config::clear(void)
+		{
+			m_flags = 0;
+			m_height = 0;
+			m_x = 0;
+			m_width = 0;
+			m_y = 0;
+			m_title.clear();
+		}
+
 		uint32_t &
 		_luna_display_config::flags(void)
 		{
@@ -174,6 +185,17 @@ namespace LUNA {
 		}
 
 		void 
+		_luna_display::clear(void)
+		{
+
+			if(!m_initialized) {
+				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_UNINITIALIZED);
+			}
+
+			m_config.clear();
+		}
+
+		void 
 		_luna_display::initialize(void)
 		{
 
@@ -203,6 +225,19 @@ namespace LUNA {
 		}
 
 		void 
+		_luna_display::set(
+			__in const luna_display_config &config
+			)
+		{
+
+			if(!m_initialized) {
+				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_UNINITIALIZED);
+			}
+
+			m_config = config;
+		}
+
+		void 
 		_luna_display::start(
 			__in const luna_display_config &config
 			)
@@ -216,7 +251,7 @@ namespace LUNA {
 				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_STARTED);
 			}
 
-			m_config = config;
+			set(config);
 			m_window = SDL_CreateWindow(STRING_CHECK(m_config.title()), m_config.x(), m_config.y(), 
 				m_config.width(), m_config.height(), m_config.flags());
 			if(!m_window) {
@@ -245,6 +280,8 @@ namespace LUNA {
 				SDL_DestroyWindow(m_window);
 				m_window = NULL;
 			}
+
+			clear();
 		}
 
 		std::string 

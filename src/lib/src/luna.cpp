@@ -25,6 +25,150 @@ namespace LUNA {
 	#define MIN_FPS 30
 	#define MIN_TICK (MS_PER_SEC / MIN_FPS)
 
+	static const std::string LUNA_EVT_STR[] = {
+		"DRAW", "SETUP", "START", "STOP", "TEARDOWN", "TICK",
+		};
+
+	#define LUNA_EVT_STRING(_TYPE_) \
+		((_TYPE_) > LUNA_EVT_MAX ? UNKNOWN : \
+		STRING_CHECK(LUNA_EVT_STR[_TYPE_]))
+
+	_luna_config::_luna_config(void)
+	{
+		return;
+	}
+
+	_luna_config::_luna_config(
+		__in const _luna_config &other
+		) :
+			m_config(other.m_config)
+	{
+		return;
+	}
+
+	_luna_config::~_luna_config(void)
+	{
+		return;
+	}
+
+	_luna_config &
+	_luna_config::operator=(
+		__in const _luna_config &other
+		)
+	{
+
+		if(this != &other) {
+			m_config = other.m_config;
+		}
+
+		return *this;
+	}
+
+	void 
+	_luna_config::add(
+		__in luna_evt_t type,
+		__in luna_evt_cb callback,
+		__in_opt void *context
+		)
+	{
+		std::map<luna_evt_t, std::pair<luna_evt_cb, void *>>::iterator iter;
+
+		if(!callback) {
+			THROW_LUNA_EXCEPTION_FORMAT(LUNA_EXCEPTION_INVALID,
+				"0x%x", type);
+		}
+
+		iter = m_config.find(type);
+		if(iter == m_config.end()) {
+			m_config.insert(std::pair<luna_evt_t, std::pair<luna_evt_cb, void *>>(
+				type, std::pair<luna_evt_cb, void *>(callback, context)));
+		} else {
+			iter->second.first = callback;
+			iter->second.second = context;
+		}
+	}
+
+	void 
+	_luna_config::clear(void)
+	{
+		m_config.clear();
+	}
+
+	bool 
+	_luna_config::contains(
+		__in luna_evt_t type
+		)
+	{
+		return (m_config.find(type) != m_config.end());
+	}
+
+	std::map<luna_evt_t, std::pair<luna_evt_cb, void *>>::iterator 
+	_luna_config::find(
+		__in luna_evt_t type
+		)
+	{
+		std::map<luna_evt_t, std::pair<luna_evt_cb, void *>>::iterator result;
+
+		result = m_config.find(type);
+		if(result == m_config.end()) {
+			THROW_LUNA_EXCEPTION_FORMAT(LUNA_EXCEPTION_NOT_FOUND,
+				"0x%x", type);
+		}
+
+		return result;
+	}
+
+	void 
+	_luna_config::invoke(
+		__in luna_evt_t type
+		)
+	{
+		std::map<luna_evt_t, std::pair<luna_evt_cb, void *>>::iterator iter;
+
+		iter = m_config.find(type);
+		if((iter != m_config.end()) && iter->second.first) {
+			iter->second.first(iter->second.second);
+		}
+	}
+
+	void 
+	_luna_config::remove(
+		__in luna_evt_t type
+		)
+	{
+		m_config.erase(find(type));
+	}
+
+	size_t 
+	_luna_config::size(void)
+	{
+		return m_config.size();
+	}
+
+	std::string 
+	_luna_config::to_string(
+		__in_opt bool verbose
+		)
+	{
+		std::stringstream result;
+		std::map<luna_evt_t, std::pair<luna_evt_cb, void *>>::iterator iter;
+
+		UNREFERENCE_PARAM(verbose);
+
+		for(iter = m_config.begin(); iter != m_config.end(); ++iter) {
+
+			if(iter != m_config.begin()) {
+				result << std::endl;
+			}
+
+			result << "--- " << LUNA_EVT_STRING(iter->first) << ": 0x" 
+				<< SCALAR_AS_HEX(luna_evt_cb, iter->second.first) << ", 0x" 
+				<< SCALAR_AS_HEX(void *, iter->second.second);
+		}
+
+		return result.str();
+	}
+
 	bool _luna::m_initialized_external = false;
 	_luna *_luna::m_instance = NULL;
 
@@ -32,7 +176,8 @@ namespace LUNA {
 		m_initialized(false),
 		m_instance_display(luna_display::acquire()),
 		m_instance_input(luna_input::acquire()),
-		m_running(false)
+		m_running(false),
+		m_tick(0)
 	{
 		std::atexit(luna::_delete);
 	}
@@ -94,6 +239,45 @@ namespace LUNA {
 	}
 
 	void 
+	_luna::add(
+		__in luna_evt_t type,
+		__in luna_evt_cb callback,
+		__in_opt void *context
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_config.add(type, callback, context);
+	}
+
+	void 
+	_luna::clear(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_config.clear();
+	}
+
+	bool 
+	_luna::contains(
+		__in luna_evt_t type
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_config.contains(type);
+	}
+
+	void 
 	_luna::external_initialize(void)
 	{
 
@@ -131,6 +315,19 @@ namespace LUNA {
 		m_initialized = true;
 	}
 
+	void 
+	_luna::invoke(
+		__in luna_evt_t type
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_config.invoke(type);
+	}
+
 	bool 
 	_luna::is_allocated(void)
 	{
@@ -150,20 +347,62 @@ namespace LUNA {
 	}
 
 	void 
-	_luna::invoke(
+	_luna::remove(
 		__in luna_evt_t type
 		)
 	{
-		luna_config::iterator iter;
 
 		if(!m_initialized) {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
 		}
 
-		iter = m_config.find(type);
-		if((iter != m_config.end()) && iter->second.first) {
-			iter->second.first(iter->second.second);
+		m_config.remove(type);
+	}
+
+	void 
+	_luna::set(
+		__in const luna_config &config
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
 		}
+
+		m_config = config;
+	}
+
+	void 
+	_luna::setup(
+		__in const luna_config &config,
+		__in const luna_display_config &display_config,
+		__in const luna_input_config &input_config
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		luna::external_initialize();
+		m_instance_input->set(input_config);
+		m_instance_display->start(display_config);
+
+		// TODO: setup components
+
+		set(config);
+		m_config.invoke(LUNA_EVT_SETUP);
+	}
+
+	size_t 
+	_luna::size(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_config.size();
 	}
 
 	void 
@@ -185,9 +424,9 @@ namespace LUNA {
 		}
 		
 		setup(config, display_config, input_config);
-
-		m_running = true;		
-		invoke(LUNA_EVT_START);
+		m_tick = 0;
+		m_running = true;
+		m_config.invoke(LUNA_EVT_START);
 
 		while(m_running) {
 			tick = SDL_GetTicks();
@@ -211,38 +450,19 @@ namespace LUNA {
 				}
 			}
 
-			// TODO: process
-			// TODO: render
+			m_config.invoke(LUNA_EVT_TICK);
 
 			if((SDL_GetTicks() - tick) < MIN_TICK) {
 				SDL_Delay(MIN_TICK - (SDL_GetTicks() - tick));
 			}
+
+			m_config.invoke(LUNA_EVT_DRAW);
+			++m_tick;
 		}
 
 		m_running = false;
+		m_tick = 0;
 		teardown();
-	}
-
-	void 
-	_luna::setup(
-		__in const luna_config &config,
-		__in const luna_display_config &display_config,
-		__in const luna_input_config &input_config
-		)
-	{
-
-		if(!m_initialized) {
-			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
-		}
-
-		luna::external_initialize();
-		m_instance_input->set(input_config);
-		m_instance_display->start(display_config);
-
-		// TODO: setup components
-
-		m_config = config;
-		invoke(LUNA_EVT_SETUP);
 	}
 
 	void 
@@ -257,8 +477,9 @@ namespace LUNA {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_STOPPED);
 		}
 		
-		invoke(LUNA_EVT_STOP);
+		m_config.invoke(LUNA_EVT_STOP);
 		m_running = false;
+		m_tick = 0;
 	}
 
 	void 
@@ -269,8 +490,8 @@ namespace LUNA {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
 		}
 		
-		invoke(LUNA_EVT_TEARDOWN);
-		m_config.clear();
+		m_config.invoke(LUNA_EVT_TEARDOWN);
+		clear();
 
 		// TODO: teardown components
 
@@ -296,7 +517,9 @@ namespace LUNA {
 		result << ")";
 
 		if(m_initialized) {
-			result << std::endl << m_instance_display->to_string(verbose)
+			result << std::endl << ", TICK. " << m_tick 
+				<< std::endl << m_config.to_string(verbose)
+				<< std::endl << m_instance_display->to_string(verbose)
 				<< std::endl << m_instance_input->to_string(verbose);
 
 			// TODO: print components
