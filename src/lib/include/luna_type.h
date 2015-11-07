@@ -32,12 +32,15 @@ namespace LUNA {
 
 	enum {
 		LUNA_EXCEPTION_ALLOCATED = 0,
+		LUNA_EXCEPTION_DRAW,
+		LUNA_EXCEPTION_EVENT,
 		LUNA_EXCEPTION_EXTERNAL,
 		LUNA_EXCEPTION_INITIALIZED,
 		LUNA_EXCEPTION_INVALID,
 		LUNA_EXCEPTION_NOT_FOUND,
 		LUNA_EXCEPTION_STARTED,
 		LUNA_EXCEPTION_STOPPED,
+		LUNA_EXCEPTION_TICK,
 		LUNA_EXCEPTION_UNINITIALIZED,
 	};
 
@@ -45,12 +48,15 @@ namespace LUNA {
 
 	static const std::string LUNA_EXCEPTION_STR[] = {
 		LUNA_EXCEPTION_HEADER " Failed to allocate library",
+		LUNA_EXCEPTION_HEADER " Draw invocation failed",
+		LUNA_EXCEPTION_HEADER " Event invocation failed",
 		LUNA_EXCEPTION_HEADER " External exception",
 		LUNA_EXCEPTION_HEADER " Library is initialized",
 		LUNA_EXCEPTION_HEADER " Invalid callback",
 		LUNA_EXCEPTION_HEADER " Event does not exist",
 		LUNA_EXCEPTION_HEADER " Library is started",
 		LUNA_EXCEPTION_HEADER " Library is stopped",
+		LUNA_EXCEPTION_HEADER " Tick invocation failed",
 		LUNA_EXCEPTION_HEADER " Library is uninitialized",
 		};
 
@@ -64,8 +70,14 @@ namespace LUNA {
 		THROW_EXCEPTION_FORMAT(LUNA_EXCEPTION_STRING(_EXCEPT_), \
 		_FORMAT_, __VA_ARGS__)
 
-	class _luna_config;
-	typedef _luna_config luna_config, *luna_config_ptr;
+	class _luna_draw_config;
+	typedef _luna_draw_config luna_draw_config, *luna_draw_config_ptr;
+
+	class _luna_event_config;
+	typedef _luna_event_config luna_event_config, *luna_event_config_ptr;
+
+	class _luna_tick_config;
+	typedef _luna_tick_config luna_tick_config, *luna_tick_config_ptr;
 
 	class _luna;
 	typedef _luna luna, *luna_ptr;

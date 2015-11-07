@@ -13,6 +13,11 @@ Changelog
 =========
 
 ##Version 0.1.1545
+*Updated:11/6/2015*
+
+* Seperated draw/tick handler from events
+* Added support for user-defined events
+
 *Updated:11/5/2015*
 
 * Added configuration classes

@@ -53,52 +53,60 @@ window_handler(
 	return result;
 }
 
-void 
+luna_err_t 
 on_draw(
-	__in void *context
+	__in void *context,
+	__in SDL_GLContext &screen
 	)
 {
 	std::cout << "DRAW: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	return LUNA_ERR_NONE;
 }
 
-void 
+luna_err_t 
 on_setup(
 	__in void *context
 	)
 {
 	std::cout << "SETUP: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	return LUNA_ERR_NONE;
 }
 
-void 
+luna_err_t 
 on_start(
 	__in void *context
 	)
 {
 	std::cout << "START: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	return LUNA_ERR_NONE;
 }
 
-void 
+luna_err_t 
 on_stop(
 	__in void *context
 	)
 {
 	std::cout << "STOP: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	return LUNA_ERR_NONE;
 }
 
-void 
+luna_err_t 
 on_teardown(
 	__in void *context
 	)
 {
 	std::cout << "TEARDOWN: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	return LUNA_ERR_NONE;
 }
 
-void 
+luna_err_t 
 on_tick(
-	__in void *context
+	__in void *context,
+	__in uint32_t tick
 	)
 {
 	std::cout << "TICK: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	return LUNA_ERR_NONE;
 }
 
 int 
@@ -114,13 +122,13 @@ main(void)
 		inst->initialize();
 
 		// TODO
-		luna_config config;
-		config.add(LUNA_EVT_DRAW, on_draw);
-		config.add(LUNA_EVT_SETUP, on_setup);
-		config.add(LUNA_EVT_START, on_start);
-		config.add(LUNA_EVT_STOP, on_stop);
-		config.add(LUNA_EVT_TEARDOWN, on_teardown);
-		config.add(LUNA_EVT_TICK, on_tick);
+		luna_draw_config draw_config(on_draw);
+
+		luna_event_config evt_config;
+		evt_config.add(LUNA_EVT_SETUP, on_setup);
+		evt_config.add(LUNA_EVT_START, on_start);
+		evt_config.add(LUNA_EVT_STOP, on_stop);
+		evt_config.add(LUNA_EVT_TEARDOWN, on_teardown);
 
 		luna_display_config disp_config(WINDOW_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT);
 		
@@ -128,7 +136,9 @@ main(void)
 		input_config.add(SDL_KEYDOWN, keydown_handler);
 		input_config.add(SDL_WINDOWEVENT, window_handler);
 
-		inst->start(config, disp_config, input_config);
+		luna_tick_config tick_config(on_tick);
+
+		inst->start(draw_config, tick_config, evt_config, disp_config, input_config);
 		// ---
 
 		inst->uninitialize();

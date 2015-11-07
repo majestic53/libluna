@@ -43,38 +43,96 @@ using namespace LUNA::COMP;
 namespace LUNA {
 
 	typedef enum {
-		LUNA_EVT_DRAW = 0,
+		LUNA_ERR_NONE = 0,
+		LUNA_ERR_FAIL,
+		LUNA_ERR_INVALID_ARGUMENT,
+	} luna_err_t;
+
+	#define LUNA_SUCCESS(_ERR_) ((_ERR_) == LUNA_ERR_NONE)
+
+	enum {
 		LUNA_EVT_SETUP,
 		LUNA_EVT_START,
 		LUNA_EVT_STOP,
 		LUNA_EVT_TEARDOWN,
-		LUNA_EVT_TICK,
-	} luna_evt_t;
 
-	#define LUNA_EVT_MAX LUNA_EVT_TICK
+		// user-defined
+	};
 
-	typedef void (*luna_evt_cb)(
+	typedef luna_err_t (*luna_draw_cb)(
+		__in void *,
+		__in SDL_GLContext &
+		);
+
+	typedef luna_err_t (*luna_evt_cb)(
 		__in void *
 		);
 
-	typedef class _luna_config {
+	typedef luna_err_t (*luna_tick_cb)(
+		__in void *,
+		__in uint32_t
+		);
+
+	typedef class _luna_draw_config {
 
 		public:
 
-			_luna_config(void);
-
-			_luna_config(
-				__in const _luna_config &other
+			_luna_draw_config(
+				__in_opt luna_draw_cb callback = NULL,
+				__in_opt void *context = NULL
 				);
 
-			virtual ~_luna_config(void);
+			_luna_draw_config(
+				__in const _luna_draw_config &other
+				);
 
-			_luna_config &operator=(
-				__in const _luna_config &other
+			~_luna_draw_config(void);
+
+			_luna_draw_config &operator=(
+				__in const _luna_draw_config &other
+				);
+
+			void clear(void);
+
+			void invoke(
+				__in SDL_GLContext &context
+				);
+
+			void set(
+				__in luna_draw_cb callback,
+				__in_opt void *context = NULL
+				);
+
+			virtual std::string to_string(
+				__in_opt bool verbose = false
+				);
+
+		protected:
+
+			luna_draw_cb m_callback;
+
+			void *m_context;
+
+	} luna_draw_config, *luna_draw_config_ptr;
+
+	typedef class _luna_event_config {
+
+		public:
+
+			_luna_event_config(void);
+
+			_luna_event_config(
+				__in const _luna_event_config &other
+				);
+
+			virtual ~_luna_event_config(void);
+
+			_luna_event_config &operator=(
+				__in const _luna_event_config &other
 				);
 
 			void add(
-				__in luna_evt_t type,
+				__in uint32_t type,
 				__in luna_evt_cb callback,
 				__in_opt void *context = NULL
 				);
@@ -82,15 +140,15 @@ namespace LUNA {
 			void clear(void);
 
 			bool contains(
-				__in luna_evt_t type
+				__in uint32_t type
 				);
 
 			void invoke(
-				__in luna_evt_t type
+				__in uint32_t type
 				);
 
 			void remove(
-				__in luna_evt_t type
+				__in uint32_t type
 				);
 
 			size_t size(void);
@@ -101,13 +159,55 @@ namespace LUNA {
 
 		protected:
 
-			std::map<luna_evt_t, std::pair<luna_evt_cb, void *>>::iterator find(
-				__in luna_evt_t type
+			std::map<uint32_t, std::pair<luna_evt_cb, void *>>::iterator find(
+				__in uint32_t type
 				);
 
-			std::map<luna_evt_t, std::pair<luna_evt_cb, void *>> m_config;
+			std::map<uint32_t, std::pair<luna_evt_cb, void *>> m_config;
 
-	} luna_config, *luna_config_ptr;
+	} luna_event_config, *luna_event_config_ptr;
+
+	typedef class _luna_tick_config {
+
+		public:
+
+			_luna_tick_config(
+				__in_opt luna_tick_cb callback = NULL,
+				__in_opt void *context = NULL
+				);
+
+			_luna_tick_config(
+				__in const _luna_tick_config &other
+				);
+
+			~_luna_tick_config(void);
+
+			_luna_tick_config &operator=(
+				__in const _luna_tick_config &other
+				);
+
+			void clear(void);
+
+			void invoke(
+				__in uint32_t tick
+				);
+
+			void set(
+				__in luna_tick_cb callback,
+				__in_opt void *context = NULL
+				);
+
+			virtual std::string to_string(
+				__in_opt bool verbose = false
+				);
+
+		protected:
+
+			luna_tick_cb m_callback;
+
+			void *m_context;
+
+	} luna_tick_config, *luna_tick_config_ptr;
 
 	typedef class _luna {
 
@@ -121,22 +221,28 @@ namespace LUNA {
 
 			luna_input_ptr acquire_input(void);
 
-			void add(
-				__in luna_evt_t type,
+			void add_event(
+				__in uint32_t type,
 				__in luna_evt_cb callback,
 				__in_opt void *context = NULL
 				);
 
-			void clear(void);
+			void clear_draw(void);
 
-			bool contains(
-				__in luna_evt_t type
+			void clear_events(void);
+
+			void clear_tick(void);
+
+			bool contains_event(
+				__in uint32_t type
 				);
+
+			size_t event_count(void);
 
 			void initialize(void);
 
-			void invoke(
-				__in luna_evt_t type
+			void invoke_event(
+				__in uint32_t type
 				);
 
 			static bool is_allocated(void);
@@ -145,20 +251,28 @@ namespace LUNA {
 
 			bool is_running(void);
 
-			void remove(
-				__in luna_evt_t type
+			void remove_event(
+				__in uint32_t type
 				);
 
-			void set(
-				__in const luna_config &config
+			void set_draw(
+				__in const luna_draw_config &config
 				);
 
-			size_t size(void);
+			void set_events(
+				__in const luna_event_config &config
+				);
+
+			void set_tick(
+				__in const luna_tick_config &config
+				);
 
 			void start(
-				__in const luna_config &config,
-				__in const luna_display_config &display_config,
-				__in const luna_input_config &input_config
+				__in const luna_draw_config &draw_config,
+				__in const luna_tick_config &tick_config,
+				__in_opt const luna_event_config &event_config = luna_event_config(),
+				__in_opt const luna_display_config &display_config = luna_display_config(),
+				__in_opt const luna_input_config &input_config = luna_input_config()
 				);
 
 			void stop(void);
@@ -190,9 +304,11 @@ namespace LUNA {
 			static void external_uninitialize(void);
 
 			void setup(
-				__in const luna_config &config,
-				__in const luna_display_config &display_config,
-				__in const luna_input_config &input_config
+				__in const luna_draw_config &draw_config,
+				__in const luna_tick_config &tick_config,
+				__in_opt const luna_event_config &event_config = luna_event_config(),
+				__in_opt const luna_display_config &display_config = luna_display_config(),
+				__in_opt const luna_input_config &input_config = luna_input_config()
 				);
 
 			void teardown(void);
@@ -203,7 +319,9 @@ namespace LUNA {
 
 			static _luna *m_instance;
 
-			luna_config m_config;
+			luna_draw_config m_draw_config;
+
+			luna_event_config m_event_config;
 
 			luna_display_ptr m_instance_display;
 
@@ -212,6 +330,8 @@ namespace LUNA {
 			bool m_running;
 
 			uint32_t m_tick;
+
+			luna_tick_config m_tick_config;
 
 	} luna, *luna_ptr;
 }
