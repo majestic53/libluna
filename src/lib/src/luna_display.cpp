@@ -24,6 +24,13 @@ namespace LUNA {
 
 	namespace COMP {
 
+		#define DISPLAY_ACCELERATE_VISUAL 1
+		#define DISPLAY_DEPTH_SIZE 16
+		#define DISPLAY_DOUBLE_BUFFER 1
+		#define DISPLAY_MAJOR_VERSION 3
+		#define DISPLAY_MINOR_VERSION 2
+		#define DISPLAY_SWAP_INTERVAL 1
+
 		_luna_display_config::_luna_display_config(
 			__in_opt const std::string &title,
 			__in_opt size_t width,
@@ -146,7 +153,8 @@ namespace LUNA {
 		_luna_display::_luna_display(void) :
 			m_initialized(false),
 			m_running(false),
-			m_window(NULL)
+			m_window(NULL),
+			m_window_context(NULL)
 		{
 			std::atexit(luna_display::_delete);
 		}
@@ -193,6 +201,21 @@ namespace LUNA {
 			}
 
 			m_config.clear();
+		}
+
+		SDL_GLContext 
+		_luna_display::context(void)
+		{
+
+			if(!m_initialized) {
+				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_UNINITIALIZED);
+			}
+
+			if(!m_running) {
+				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_STOPPED);
+			}
+
+			return m_window_context;
 		}
 
 		void 
@@ -252,13 +275,27 @@ namespace LUNA {
 			}
 
 			set(config);
+			SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, DISPLAY_ACCELERATE_VISUAL);
+			SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, DISPLAY_DEPTH_SIZE);
+			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, DISPLAY_DOUBLE_BUFFER);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, DISPLAY_MAJOR_VERSION);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, DISPLAY_MINOR_VERSION);
+
 			m_window = SDL_CreateWindow(STRING_CHECK(m_config.title()), m_config.x(), m_config.y(), 
-				m_config.width(), m_config.height(), m_config.flags());
+				m_config.width(), m_config.height(), m_config.flags() 
+				| SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 			if(!m_window) {
 				THROW_LUNA_DISPLAY_EXCEPTION_FORMAT(LUNA_DISPLAY_EXCEPTION_EXTERNAL,
 					"SDL_CreateWindow failed: %s", SDL_GetError());
 			}
 
+			m_window_context = SDL_GL_CreateContext(m_window);
+			if(!m_window_context) {
+				THROW_LUNA_DISPLAY_EXCEPTION_FORMAT(LUNA_DISPLAY_EXCEPTION_EXTERNAL,
+					"SDL_GL_CreateContext failed: %s", SDL_GetError());
+			}
+
+			SDL_GL_SetSwapInterval(DISPLAY_SWAP_INTERVAL);
 			m_running = true;
 		}
 
@@ -275,6 +312,11 @@ namespace LUNA {
 			}
 
 			m_running = false;
+
+			if(m_window_context) {
+				SDL_GL_DeleteContext(m_window_context);
+				m_window_context = NULL;
+			}
 
 			if(m_window) {
 				SDL_DestroyWindow(m_window);
@@ -320,6 +362,21 @@ namespace LUNA {
 			}
 
 			m_initialized = false;
+		}
+
+		SDL_Window *
+		_luna_display::window(void)
+		{
+
+			if(!m_initialized) {
+				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_UNINITIALIZED);
+			}
+
+			if(!m_running) {
+				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_STOPPED);
+			}
+
+			return m_window;
 		}
 	}
 }

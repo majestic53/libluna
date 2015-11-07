@@ -26,6 +26,9 @@
 #define LUNA libluna
 #endif // LUNA
 
+#include <GL/gl.h>
+#include <GL/glut.h>
+#include <SDL2/SDL.h>
 #include "luna_define.h"
 #include "luna_exception.h"
 
@@ -61,7 +64,7 @@ namespace LUNA {
 
 	typedef luna_err_t (*luna_draw_cb)(
 		__in void *,
-		__in SDL_GLContext &
+		__in SDL_GLContext
 		);
 
 	typedef luna_err_t (*luna_evt_cb)(
@@ -95,7 +98,8 @@ namespace LUNA {
 			void clear(void);
 
 			void invoke(
-				__in SDL_GLContext &context
+				__in SDL_Window *window,
+				__in SDL_GLContext context
 				);
 
 			void set(

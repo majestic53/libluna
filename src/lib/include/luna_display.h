@@ -92,6 +92,8 @@ namespace LUNA {
 
 				void clear(void);
 
+				SDL_GLContext context(void);
+
 				void initialize(void);
 
 				static bool is_allocated(void);
@@ -116,6 +118,8 @@ namespace LUNA {
 
 				void uninitialize(void);
 
+				SDL_Window *window(void);
+
 			protected:
 
 				_luna_display(void);
@@ -139,6 +143,8 @@ namespace LUNA {
 				bool m_running;
 
 				SDL_Window *m_window;
+
+				SDL_GLContext m_window_context;
 
 		} luna_display, *luna_display_ptr;
 

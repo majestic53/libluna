@@ -20,7 +20,6 @@
 #ifndef LUNA_DEFINE_H_
 #define LUNA_DEFINE_H_
 
-#include <SDL2/SDL.h>
 #include <cstdbool>
 #include <cstddef>
 #include <cstdint>
@@ -72,7 +71,7 @@ namespace LUNA {
 
 	#define VERSION_MAJ 0
 	#define VERSION_MIN 1
-	#define VERSION_REV 4
+	#define VERSION_REV 5
 	#define VERSION_TICK 1545
 }
 

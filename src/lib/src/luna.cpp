@@ -82,15 +82,20 @@ namespace LUNA {
 
 	void 
 	_luna_draw_config::invoke(
-		__in SDL_GLContext &context
+		__in SDL_Window *window,
+		__in SDL_GLContext context
 		)
 	{
 
 		if(m_callback) {
+			glClearColor(0.f, 0.f, 0.f, 1.f);
+			glClear(GL_COLOR_BUFFER_BIT);
 
 			if(!LUNA_SUCCESS(m_callback(m_context, context))) {
 				THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_DRAW);
 			}
+
+			SDL_GL_SwapWindow(window);
 		}
 	}
 
@@ -652,6 +657,8 @@ namespace LUNA {
 	{
 		uint32_t tick;
 		SDL_Event event;
+		SDL_Window *window = NULL;
+		SDL_GLContext context = NULL;
 
 		if(!m_initialized) {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
@@ -664,6 +671,8 @@ namespace LUNA {
 		setup(draw_config, tick_config, event_config, display_config, input_config);
 		m_tick = 0;
 		m_running = true;
+		window = m_instance_display->window();
+		context = m_instance_display->context();
 		m_event_config.invoke(LUNA_EVT_START);
 
 		while(m_running) {
@@ -694,11 +703,13 @@ namespace LUNA {
 				SDL_Delay(MIN_TICK - (SDL_GetTicks() - tick));
 			}
 
-			// TODO: DRAW
+			m_draw_config.invoke(window, context);
 			++m_tick;
 		}
 
 		m_running = false;
+		context = NULL;
+		window = NULL;
 		m_tick = 0;
 		teardown();
 	}

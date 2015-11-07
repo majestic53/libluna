@@ -125,7 +125,7 @@ namespace LUNA {
 		if(!buffer.empty()) {
 
 			if(!message.empty()) {
-				stream << ":";
+				stream << ": ";
 			}
 
 			stream << buffer;
