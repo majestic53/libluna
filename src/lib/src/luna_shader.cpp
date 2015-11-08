@@ -228,8 +228,23 @@ namespace LUNA {
 			)
 		{
 			std::stringstream result;
+			std::map<GLuint, GLenum>::iterator iter;
 
-			// TODO
+			result << LUNA_SHADER_HEADER << " (" << (m_initialized ? "INIT" : "UNINIT");
+
+			if(verbose) {
+				result << ", PTR. 0x" << SCALAR_AS_HEX(luna_shader_ptr, this);
+			}
+
+			result << ")";
+
+			if(m_initialized) {
+
+				for(iter = m_shader_map.begin(); iter != m_shader_map.end(); ++iter) {
+					result << "\n--- 0x" << SCALAR_AS_HEX(GLuint, iter->first)
+						<< ", 0x" << SCALAR_AS_HEX(GLenum, iter->second);
+				}
+			}
 
 			return result.str();
 		}
