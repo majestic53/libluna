@@ -88,8 +88,6 @@ namespace LUNA {
 	{
 
 		if(m_callback) {
-			glClearColor(0.f, 0.f, 0.f, 1.f);
-			glClear(GL_COLOR_BUFFER_BIT);
 
 			if(!LUNA_SUCCESS(m_callback(m_context, context))) {
 				THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_DRAW);
@@ -365,6 +363,7 @@ namespace LUNA {
 		m_initialized(false),
 		m_instance_display(luna_display::acquire()),
 		m_instance_input(luna_input::acquire()),
+		m_instance_shader(luna_shader::acquire()),
 		m_running(false),
 		m_tick(0)
 	{
@@ -427,6 +426,17 @@ namespace LUNA {
 		return m_instance_input;
 	}
 
+	luna_shader_ptr 
+	_luna::acquire_shader(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader;
+	}
+
 	void 
 	_luna::add_event(
 		__in uint32_t type,
@@ -440,6 +450,21 @@ namespace LUNA {
 		}
 
 		m_event_config.add(type, callback, context);
+	}
+
+	GLuint 
+	_luna::add_shader(
+		__in const std::string &input,
+		__in bool is_file,
+		__in GLenum type
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader->add(input, is_file, type);
 	}
 
 	void 
@@ -465,6 +490,17 @@ namespace LUNA {
 	}
 
 	void 
+	_luna::clear_shaders(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_shader->clear();		
+	}
+
+	void 
 	_luna::clear_tick(void)
 	{
 
@@ -486,6 +522,19 @@ namespace LUNA {
 		}
 
 		return m_event_config.contains(type);
+	}
+
+	bool 
+	_luna::contains_shader(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader->contains(id);
 	}
 
 	size_t 
@@ -529,6 +578,7 @@ namespace LUNA {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_INITIALIZED);
 		}
 
+		m_instance_shader->initialize();
 		m_instance_input->initialize();
 		m_instance_display->initialize();
 
@@ -579,6 +629,19 @@ namespace LUNA {
 		}
 
 		m_event_config.remove(type);
+	}
+
+	void 
+	_luna::remove_shader(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_shader->remove(id);
 	}
 
 	void 
@@ -635,6 +698,7 @@ namespace LUNA {
 		}
 
 		luna::external_initialize();
+		m_instance_shader->clear();
 		m_instance_input->set(input_config);
 		m_instance_display->start(display_config);
 
@@ -644,6 +708,30 @@ namespace LUNA {
 		set_draw(draw_config);
 		set_tick(tick_config);
 		m_event_config.invoke(LUNA_EVT_SETUP);
+	}
+
+	bool 
+	_luna::shader_count(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader->size();
+	}
+
+	GLenum 
+	_luna::shader_type(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader->type(id);
 	}
 
 	void 
@@ -748,6 +836,7 @@ namespace LUNA {
 
 		m_instance_display->stop();
 		m_instance_input->clear();
+		m_instance_shader->clear();
 		luna::external_uninitialize();
 	}
 
@@ -774,7 +863,8 @@ namespace LUNA {
 				<< std::endl << m_draw_config.to_string(verbose)
 				<< std::endl << m_tick_config.to_string(verbose)
 				<< std::endl << m_instance_display->to_string(verbose)
-				<< std::endl << m_instance_input->to_string(verbose);
+				<< std::endl << m_instance_input->to_string(verbose)
+				<< std::endl << m_instance_shader->to_string(verbose);
 
 			// TODO: print components
 
@@ -801,6 +891,7 @@ namespace LUNA {
 
 		m_instance_display->uninitialize();
 		m_instance_input->uninitialize();
+		m_instance_shader->uninitialize();
 	}
 
 	std::string 

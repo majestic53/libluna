@@ -28,11 +28,11 @@ all: build archive
 archive:
 	@echo ''
 	@echo '--- BUILDING LIBRARY -----------------------'
-	ar rcs $(DIR_BUILD)$(LIB) $(DIR_BUILD)luna.o $(DIR_BUILD)luna_display.o $(DIR_BUILD)luna_exception.o $(DIR_BUILD)luna_input.o
+	ar rcs $(DIR_BUILD)$(LIB) $(DIR_BUILD)luna.o $(DIR_BUILD)luna_display.o $(DIR_BUILD)luna_exception.o $(DIR_BUILD)luna_input.o $(DIR_BUILD)luna_shader.o
 	@echo '--- DONE -----------------------------------'
 	@echo ''
 
-build: luna.o luna_display.o luna_exception.o luna_input.o
+build: luna.o luna_display.o luna_exception.o luna_input.o luna_shader.o
 
 luna.o: $(DIR_SRC)luna.cpp $(DIR_INC)luna.h
 	$(CC) $(CC_FLAGS) -c $(DIR_SRC)luna.cpp -o $(DIR_BUILD)luna.o
@@ -47,3 +47,6 @@ luna_display.o: $(DIR_SRC)luna_display.cpp $(DIR_INC)luna_display.h
 
 luna_input.o: $(DIR_SRC)luna_input.cpp $(DIR_INC)luna_input.h
 	$(CC) $(CC_FLAGS) -c $(DIR_SRC)luna_input.cpp -o $(DIR_BUILD)luna_input.o
+
+luna_shader.o: $(DIR_SRC)luna_shader.cpp $(DIR_INC)luna_shader.h
+	$(CC) $(CC_FLAGS) -c $(DIR_SRC)luna_shader.cpp -o $(DIR_BUILD)luna_shader.o

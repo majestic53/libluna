@@ -15,6 +15,7 @@ Changelog
 ##Version 0.1.1545
 *Updated:11/7/2015*
 
+* Added support for opengl shaders
 * Added support for opengl context
 
 *Updated:11/6/2015*

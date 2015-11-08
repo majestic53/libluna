@@ -265,6 +265,7 @@ namespace LUNA {
 			__in const luna_display_config &config
 			)
 		{
+			GLenum err;
 
 			if(!m_initialized) {
 				THROW_LUNA_DISPLAY_EXCEPTION(LUNA_DISPLAY_EXCEPTION_UNINITIALIZED);
@@ -293,6 +294,19 @@ namespace LUNA {
 			if(!m_window_context) {
 				THROW_LUNA_DISPLAY_EXCEPTION_FORMAT(LUNA_DISPLAY_EXCEPTION_EXTERNAL,
 					"SDL_GL_CreateContext failed: %s", SDL_GetError());
+			}
+
+			glewExperimental = GL_TRUE;
+
+			err = glewInit();
+			if(err != GLEW_OK) {
+				THROW_LUNA_DISPLAY_EXCEPTION_FORMAT(LUNA_DISPLAY_EXCEPTION_EXTERNAL,
+					"glewInit failed: %s", glewGetErrorString(err));
+			}
+
+			if(!GLEW_VERSION_3_2) {
+				THROW_LUNA_DISPLAY_EXCEPTION_FORMAT(LUNA_DISPLAY_EXCEPTION_EXTERNAL,
+					"OpenGL version unsupported: %s", glGetString(GL_VERSION));
 			}
 
 			SDL_GL_SetSwapInterval(DISPLAY_SWAP_INTERVAL);

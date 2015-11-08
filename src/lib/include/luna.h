@@ -26,8 +26,7 @@
 #define LUNA libluna
 #endif // LUNA
 
-#include <GL/gl.h>
-#include <GL/glut.h>
+#include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include "luna_define.h"
 #include "luna_exception.h"
@@ -40,6 +39,7 @@ using namespace LUNA;
 
 #include "luna_display.h"
 #include "luna_input.h"
+#include "luna_shader.h"
 
 using namespace LUNA::COMP;
 
@@ -221,24 +221,32 @@ namespace LUNA {
 
 			static _luna *acquire(void);
 
-			luna_display_ptr acquire_display(void);
-
-			luna_input_ptr acquire_input(void);
-
 			void add_event(
 				__in uint32_t type,
 				__in luna_evt_cb callback,
 				__in_opt void *context = NULL
 				);
 
+			GLuint add_shader(
+				__in const std::string &input,
+				__in bool is_file,
+				__in GLenum type
+				);
+
 			void clear_draw(void);
 
 			void clear_events(void);
+
+			void clear_shaders(void);
 
 			void clear_tick(void);
 
 			bool contains_event(
 				__in uint32_t type
+				);
+
+			bool contains_shader(
+				__in GLuint id
 				);
 
 			size_t event_count(void);
@@ -259,6 +267,10 @@ namespace LUNA {
 				__in uint32_t type
 				);
 
+			void remove_shader(
+				__in GLuint id
+				);
+
 			void set_draw(
 				__in const luna_draw_config &config
 				);
@@ -269,6 +281,12 @@ namespace LUNA {
 
 			void set_tick(
 				__in const luna_tick_config &config
+				);
+
+			bool shader_count(void);
+
+			GLenum shader_type(
+				__in GLuint id
 				);
 
 			void start(
@@ -303,6 +321,12 @@ namespace LUNA {
 
 			static void _delete(void);
 
+			luna_display_ptr acquire_display(void);
+
+			luna_input_ptr acquire_input(void);
+
+			luna_shader_ptr acquire_shader(void);
+
 			static void external_initialize(void);
 
 			static void external_uninitialize(void);
@@ -330,6 +354,8 @@ namespace LUNA {
 			luna_display_ptr m_instance_display;
 
 			luna_input_ptr m_instance_input;
+
+			luna_shader_ptr m_instance_shader;
 
 			bool m_running;
 

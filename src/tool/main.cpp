@@ -59,7 +59,11 @@ on_draw(
 	__in SDL_GLContext screen
 	)
 {
-	//std::cout << "DRAW: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	std::cout << "DRAW: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+
+	glClearColor(0.f, 0.f, 0.f, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	return LUNA_ERR_NONE;
 }
 
@@ -105,7 +109,7 @@ on_tick(
 	__in uint32_t tick
 	)
 {
-	//std::cout << "TICK: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
+	std::cout << "TICK: 0x" << SCALAR_AS_HEX(void *, context) << std::endl;
 	return LUNA_ERR_NONE;
 }
 
