@@ -83,13 +83,13 @@ namespace LUNA {
 	void 
 	_luna_draw_config::invoke(
 		__in SDL_Window *window,
-		__in SDL_GLContext context
+		__in SDL_GLContext screen
 		)
 	{
 
 		if(m_callback) {
 
-			if(!LUNA_SUCCESS(m_callback(m_context, context))) {
+			if(!LUNA_SUCCESS(m_callback(window, screen, m_context))) {
 				THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_DRAW);
 			}
 
@@ -314,13 +314,15 @@ namespace LUNA {
 
 	void 
 	_luna_tick_config::invoke(
+		__in SDL_Window *window,
+		__in SDL_GLContext screen,
 		__in uint32_t tick
 		)
 	{
 
 		if(m_callback) {
 
-			if(!LUNA_SUCCESS(m_callback(m_context, tick))) {
+			if(!LUNA_SUCCESS(m_callback(window, screen, tick, m_context))) {
 				THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_TICK);
 			}
 		}
@@ -364,6 +366,7 @@ namespace LUNA {
 		m_instance_display(luna_display::acquire()),
 		m_instance_input(luna_input::acquire()),
 		m_instance_shader(luna_shader::acquire()),
+		m_instance_shader_program(luna_shader_program::acquire()),
 		m_running(false),
 		m_tick(0)
 	{
@@ -437,6 +440,17 @@ namespace LUNA {
 		return m_instance_shader;
 	}
 
+	luna_shader_program_ptr 
+	_luna::acquire_shader_program(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader_program;
+	}
+
 	void 
 	_luna::add_event(
 		__in uint32_t type,
@@ -465,6 +479,19 @@ namespace LUNA {
 		}
 
 		return m_instance_shader->add(input, is_file, type);
+	}
+
+	GLuint 
+	_luna::add_shader_program(
+		__in const std::vector<GLuint> &ids
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader_program->add(ids);
 	}
 
 	void 
@@ -498,6 +525,17 @@ namespace LUNA {
 		}
 
 		m_instance_shader->clear();		
+	}
+
+	void 
+	_luna::clear_shader_programs(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_shader_program->clear();
 	}
 
 	void 
@@ -535,6 +573,19 @@ namespace LUNA {
 		}
 
 		return m_instance_shader->contains(id);
+	}
+
+	bool 
+	_luna::contains_shader_program(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader_program->contains(id);
 	}
 
 	size_t 
@@ -579,6 +630,7 @@ namespace LUNA {
 		}
 
 		m_instance_shader->initialize();
+		m_instance_shader_program->initialize();
 		m_instance_input->initialize();
 		m_instance_display->initialize();
 
@@ -645,6 +697,19 @@ namespace LUNA {
 	}
 
 	void 
+	_luna::remove_shader_program(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader_program->remove(id);
+	}
+
+	void 
 	_luna::set_draw(
 		__in const luna_draw_config &config
 		)
@@ -699,6 +764,7 @@ namespace LUNA {
 
 		luna::external_initialize();
 		m_instance_shader->clear();
+		m_instance_shader_program->clear();
 		m_instance_input->set(input_config);
 		m_instance_display->start(display_config);
 
@@ -710,7 +776,7 @@ namespace LUNA {
 		m_event_config.invoke(LUNA_EVT_SETUP);
 	}
 
-	bool 
+	size_t 
 	_luna::shader_count(void)
 	{
 
@@ -719,6 +785,45 @@ namespace LUNA {
 		}
 
 		return m_instance_shader->size();
+	}
+
+	GLint 
+	_luna::shader_program_attribute(
+		__in GLuint id,
+		__in const std::string &name
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader_program->attribute(id, name);
+	}
+
+	size_t 
+	_luna::shader_program_count(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader_program->size();
+	}
+
+	GLint 
+	_luna::shader_program_uniform(
+		__in GLuint id,
+		__in const std::string &name
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_shader_program->uniform(id, name);
 	}
 
 	GLenum 
@@ -785,7 +890,7 @@ namespace LUNA {
 				}
 			}
 
-			m_tick_config.invoke(m_tick);
+			m_tick_config.invoke(window, context, m_tick);
 
 			if((SDL_GetTicks() - tick) < MIN_TICK) {
 				SDL_Delay(MIN_TICK - (SDL_GetTicks() - tick));
@@ -836,6 +941,7 @@ namespace LUNA {
 
 		m_instance_display->stop();
 		m_instance_input->clear();
+		m_instance_shader_program->clear();
 		m_instance_shader->clear();
 		luna::external_uninitialize();
 	}
@@ -857,14 +963,19 @@ namespace LUNA {
 		result << ")";
 
 		if(m_initialized) {
-			result << ", TICK. " << m_tick 
-				<< std::endl << "--- EVENTS:"
-				<< std::endl << m_event_config.to_string(verbose)
-				<< std::endl << m_draw_config.to_string(verbose)
+			result << ", TICK. " << m_tick;
+
+			if(m_event_config.size()) {
+				result << std::endl << "--- EVENTS:" << std::endl 
+					<< m_event_config.to_string(verbose);
+			}
+				
+			result << std::endl << m_draw_config.to_string(verbose)
 				<< std::endl << m_tick_config.to_string(verbose)
 				<< std::endl << m_instance_display->to_string(verbose)
 				<< std::endl << m_instance_input->to_string(verbose)
-				<< std::endl << m_instance_shader->to_string(verbose);
+				<< std::endl << m_instance_shader->to_string(verbose)
+				<< std::endl << m_instance_shader_program->to_string(verbose);
 
 			// TODO: print components
 
@@ -891,6 +1002,7 @@ namespace LUNA {
 
 		m_instance_display->uninitialize();
 		m_instance_input->uninitialize();
+		m_instance_shader_program->uninitialize();
 		m_instance_shader->uninitialize();
 	}
 

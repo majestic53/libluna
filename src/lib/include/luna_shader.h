@@ -44,11 +44,23 @@ namespace LUNA {
 					__in GLuint id
 					);
 
+				size_t decrement_reference(
+					__in GLuint id
+					);
+
+				size_t increment_reference(
+					__in GLuint id
+					);
+
 				void initialize(void);
 
 				static bool is_allocated(void);
 
 				bool is_initialized(void);
+
+				size_t reference_count(
+					__in GLuint id
+					);
 
 				void remove(
 					__in GLuint id
@@ -80,7 +92,7 @@ namespace LUNA {
 
 				static void _delete(void);
 
-				std::map<GLuint, GLenum>::iterator find(
+				std::map<GLuint, std::pair<GLenum, size_t>>::iterator find(
 					__in GLuint id
 					);
 
@@ -88,9 +100,101 @@ namespace LUNA {
 
 				static _luna_shader *m_instance;
 
-				std::map<GLuint, GLenum> m_shader_map;
+				std::map<GLuint, std::pair<GLenum, size_t>> m_shader_map;
 
 		} luna_shader, *luna_shader_ptr;
+
+		typedef class _luna_shader_program {
+
+			public:
+
+				~_luna_shader_program(void);
+
+				static _luna_shader_program *acquire(void);
+
+				GLuint add(
+					__in const std::vector<GLuint> &shaders
+					);
+
+				GLint attribute(
+					__in GLuint id,
+					__in const std::string &name
+					);
+
+				void clear(void);
+
+				bool contains(
+					__in GLuint id
+					);
+
+				size_t decrement_reference(
+					__in GLuint id
+					);
+
+				size_t increment_reference(
+					__in GLuint id
+					);
+
+				void initialize(void);
+
+				static bool is_allocated(void);
+
+				bool is_initialized(void);
+
+				size_t reference_count(
+					__in GLuint id
+					);
+
+				void remove(
+					__in GLuint id
+					);
+
+				size_t size(void);
+
+				std::string to_string(
+					__in_opt bool verbose = false
+					);
+
+				GLint uniform(
+					__in GLuint id,
+					__in const std::string &name
+					);
+
+				void uninitialize(void);
+
+			protected:
+
+				_luna_shader_program(void);
+
+				_luna_shader_program(
+					__in const _luna_shader_program &other
+					);
+
+				_luna_shader_program &operator=(
+					__in const _luna_shader_program &other
+					);
+
+				static void _delete(void);
+
+				size_t decrement_shader_reference(
+					__in GLuint id
+					);
+
+				size_t increment_shader_reference(
+					__in GLuint id
+					);
+
+				std::map<GLuint, std::pair<std::vector<GLuint>, size_t>>::iterator find(
+					__in GLuint id
+					);
+
+				bool m_initialized;
+
+				static _luna_shader_program *m_instance;
+
+				std::map<GLuint, std::pair<std::vector<GLuint>, size_t>> m_shader_program_map;
+
+		} luna_shader_program, *luna_shader_program_ptr;
 	}
 }
 

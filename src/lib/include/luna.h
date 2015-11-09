@@ -63,8 +63,9 @@ namespace LUNA {
 	};
 
 	typedef luna_err_t (*luna_draw_cb)(
-		__in void *,
-		__in SDL_GLContext
+		__in SDL_Window *,
+		__in SDL_GLContext,
+		__in void *
 		);
 
 	typedef luna_err_t (*luna_evt_cb)(
@@ -72,8 +73,10 @@ namespace LUNA {
 		);
 
 	typedef luna_err_t (*luna_tick_cb)(
-		__in void *,
-		__in uint32_t
+		__in SDL_Window *,
+		__in SDL_GLContext,
+		__in uint32_t,
+		__in void *
 		);
 
 	typedef class _luna_draw_config {
@@ -99,7 +102,7 @@ namespace LUNA {
 
 			void invoke(
 				__in SDL_Window *window,
-				__in SDL_GLContext context
+				__in SDL_GLContext screen
 				);
 
 			void set(
@@ -193,6 +196,8 @@ namespace LUNA {
 			void clear(void);
 
 			void invoke(
+				__in SDL_Window *window,
+				__in SDL_GLContext screen,
 				__in uint32_t tick
 				);
 
@@ -231,6 +236,10 @@ namespace LUNA {
 				__in const std::string &input,
 				__in bool is_file,
 				__in GLenum type
+				);			
+
+			GLuint add_shader_program(
+				__in const std::vector<GLuint> &ids
 				);
 
 			void clear_draw(void);
@@ -239,6 +248,8 @@ namespace LUNA {
 
 			void clear_shaders(void);
 
+			void clear_shader_programs(void);
+
 			void clear_tick(void);
 
 			bool contains_event(
@@ -246,6 +257,10 @@ namespace LUNA {
 				);
 
 			bool contains_shader(
+				__in GLuint id
+				);
+
+			bool contains_shader_program(
 				__in GLuint id
 				);
 
@@ -271,6 +286,10 @@ namespace LUNA {
 				__in GLuint id
 				);
 
+			void remove_shader_program(
+				__in GLuint id
+				);
+
 			void set_draw(
 				__in const luna_draw_config &config
 				);
@@ -283,10 +302,22 @@ namespace LUNA {
 				__in const luna_tick_config &config
 				);
 
-			bool shader_count(void);
+			size_t shader_count(void);
+
+			GLint shader_program_attribute(
+				__in GLuint id,
+				__in const std::string &name
+				);
+
+			size_t shader_program_count(void);
 
 			GLenum shader_type(
 				__in GLuint id
+				);
+
+			GLint shader_program_uniform(
+				__in GLuint id,
+				__in const std::string &name
 				);
 
 			void start(
@@ -327,6 +358,8 @@ namespace LUNA {
 
 			luna_shader_ptr acquire_shader(void);
 
+			luna_shader_program_ptr acquire_shader_program(void);
+
 			static void external_initialize(void);
 
 			static void external_uninitialize(void);
@@ -356,6 +389,8 @@ namespace LUNA {
 			luna_input_ptr m_instance_input;
 
 			luna_shader_ptr m_instance_shader;
+
+			luna_shader_program_ptr m_instance_shader_program;
 
 			bool m_running;
 

@@ -28,6 +28,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace LUNA {
 
@@ -51,6 +52,7 @@ namespace LUNA {
 	#endif // __out_opt
 
 	#define MS_PER_SEC 1000
+	#define REFERENCE_INIT 1
 
 	#define EMPTY "EMPTY"
 	#define INVALID "INVALID"
@@ -71,7 +73,7 @@ namespace LUNA {
 
 	#define VERSION_MAJ 0
 	#define VERSION_MIN 1
-	#define VERSION_REV 5
+	#define VERSION_REV 6
 	#define VERSION_TICK 1545
 }
 

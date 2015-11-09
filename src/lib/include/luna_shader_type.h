@@ -25,6 +25,7 @@ namespace LUNA {
 	namespace COMP {
 
 		#define LUNA_SHADER_HEADER "(SHADER)"
+		#define LUNA_SHADER_PROGRAM_HEADER "(SHADER_PROGRAM)"
 
 #ifndef NDEBUG
 		#define LUNA_SHADER_EXCEPTION_HEADER LUNA_SHADER_HEADER
@@ -64,6 +65,9 @@ namespace LUNA {
 
 		class _luna_shader;
 		typedef _luna_shader luna_shader, *luna_shader_ptr;
+
+		class _luna_shader_program;
+		typedef _luna_shader_program luna_shader_program, *luna_shader_program_ptr;
 	}
 }
 
