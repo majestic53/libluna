@@ -19,10 +19,10 @@
 
 #version 150
 
-out vec4 col0;
+out vec4 col_out;
 
 void 
 main(void)
 {
-	col0 = vec4(1.f, 1.f, 1.f, 1.f);
+	col_out = vec4(1.f, 1.f, 1.f, 1.f);
 }

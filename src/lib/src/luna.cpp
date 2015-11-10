@@ -367,6 +367,7 @@ namespace LUNA {
 		m_instance_input(luna_input::acquire()),
 		m_instance_shader(luna_shader::acquire()),
 		m_instance_shader_program(luna_shader_program::acquire()),
+		m_instance_vertex(luna_vertex::acquire()),
 		m_running(false),
 		m_tick(0)
 	{
@@ -451,6 +452,31 @@ namespace LUNA {
 		return m_instance_shader_program;
 	}
 
+	luna_vertex_ptr 
+	_luna::acquire_vertex(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_vertex;
+	}
+
+	GLuint 
+	_luna::add_buffer(
+		__in GLenum target,
+		__in size_t count
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_vertex->add_buffer(target, count);
+	}
+
 	void 
 	_luna::add_event(
 		__in uint32_t type,
@@ -492,6 +518,59 @@ namespace LUNA {
 		}
 
 		return m_instance_shader_program->add(ids);
+	}
+
+	GLuint 
+	_luna::add_vertex(
+		__in size_t count
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_vertex->add_vertex(count);
+	}
+
+	void 
+	_luna::bind_buffer(
+		__in GLenum target,
+		__in_opt GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_vertex->bind_buffer(target, id);
+	}
+
+	void 
+	_luna::bind_vertex(
+		__in_opt GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_vertex->bind_vertex(id);
+	}
+
+	size_t 
+	_luna::buffer_count(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_vertex->buffer_count(id);
 	}
 
 	void 
@@ -549,6 +628,30 @@ namespace LUNA {
 		m_tick_config.clear();
 	}
 
+	void 
+	_luna::clear_vertex_buffer(void)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_vertex->clear();
+	}
+
+	bool 
+	_luna::contains_buffer(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_vertex->contains_buffer(id);
+	}
+
 	bool 
 	_luna::contains_event(
 		__in uint32_t type
@@ -586,6 +689,19 @@ namespace LUNA {
 		}
 
 		return m_instance_shader_program->contains(id);
+	}
+
+	bool 
+	_luna::contains_vertex(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_vertex->contains_vertex(id);
 	}
 
 	size_t 
@@ -631,6 +747,7 @@ namespace LUNA {
 
 		m_instance_shader->initialize();
 		m_instance_shader_program->initialize();
+		m_instance_vertex->initialize();
 		m_instance_input->initialize();
 		m_instance_display->initialize();
 
@@ -671,6 +788,19 @@ namespace LUNA {
 	}
 
 	void 
+	_luna::remove_buffer(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_vertex->remove_buffer(id);
+	}
+
+	void 
 	_luna::remove_event(
 		__in uint32_t type
 		)
@@ -706,7 +836,36 @@ namespace LUNA {
 			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
 		}
 
-		return m_instance_shader_program->remove(id);
+		m_instance_shader_program->remove(id);
+	}
+
+	void 
+	_luna::remove_vertex(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_vertex->remove_vertex(id);
+	}
+
+	void 
+	_luna::set_buffer_data(
+		__in GLenum target,
+		__in const void *data,
+		__in size_t length,
+		__in GLenum usage
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_vertex->set_buffer_data(target, data, length, usage);
 	}
 
 	void 
@@ -765,6 +924,7 @@ namespace LUNA {
 		luna::external_initialize();
 		m_instance_shader->clear();
 		m_instance_shader_program->clear();
+		m_instance_vertex->clear();
 		m_instance_input->set(input_config);
 		m_instance_display->start(display_config);
 
@@ -941,6 +1101,7 @@ namespace LUNA {
 
 		m_instance_display->stop();
 		m_instance_input->clear();
+		m_instance_vertex->clear();
 		m_instance_shader_program->clear();
 		m_instance_shader->clear();
 		luna::external_uninitialize();
@@ -975,7 +1136,8 @@ namespace LUNA {
 				<< std::endl << m_instance_display->to_string(verbose)
 				<< std::endl << m_instance_input->to_string(verbose)
 				<< std::endl << m_instance_shader->to_string(verbose)
-				<< std::endl << m_instance_shader_program->to_string(verbose);
+				<< std::endl << m_instance_shader_program->to_string(verbose)
+				<< std::endl << m_instance_vertex->to_string(verbose);
 
 			// TODO: print components
 
@@ -1002,8 +1164,22 @@ namespace LUNA {
 
 		m_instance_display->uninitialize();
 		m_instance_input->uninitialize();
+		m_instance_vertex->uninitialize();
 		m_instance_shader_program->uninitialize();
 		m_instance_shader->uninitialize();
+	}
+
+	void 
+	_luna::use_shader_program(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		m_instance_shader_program->use(id);
 	}
 
 	std::string 
@@ -1011,5 +1187,18 @@ namespace LUNA {
 	{
 		return STRING_CAT(VERSION_MAJ) "." STRING_CAT(VERSION_MIN) "."
 			STRING_CAT(VERSION_TICK) "." STRING_CAT(VERSION_REV);
+	}
+
+	size_t 
+	_luna::vertex_count(
+		__in GLuint id
+		)
+	{
+
+		if(!m_initialized) {
+			THROW_LUNA_EXCEPTION(LUNA_EXCEPTION_UNINITIALIZED);
+		}
+
+		return m_instance_vertex->vertex_count(id);
 	}
 }

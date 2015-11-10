@@ -162,6 +162,10 @@ namespace LUNA {
 
 				void uninitialize(void);
 
+				void use(
+					__in_opt GLuint id = 0
+					);
+
 			protected:
 
 				_luna_shader_program(void);

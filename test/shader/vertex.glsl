@@ -19,10 +19,10 @@
 
 #version 150
 
-in vec3 vert0;
+in vec3 vert;
 
 void 
 main(void)
 {
-	gl_Position = vec4(vert0, 1);
+	gl_Position = vec4(vert, 1.f);
 }

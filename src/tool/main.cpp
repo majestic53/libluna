@@ -77,11 +77,13 @@ on_draw(
 		goto exit;
 	}
 
-	glUseProgram(cont->program);
-	glBindVertexArray(cont->vao);
+	cont->instance->use_shader_program(cont->program);
+	cont->instance->bind_vertex(cont->vao);
+
 	glDrawArrays(GL_TRIANGLES, 0, 3);
-	glBindVertexArray(0);
-	glUseProgram(0);
+
+	cont->instance->bind_vertex();
+	cont->instance->use_shader_program(0);
 
 exit:
 	return result;
@@ -96,7 +98,7 @@ on_setup(
 	luna_err_t result = LUNA_ERR_NONE;
 	luna_test_context *cont = (luna_test_context *) context;
 
-	GLfloat vertexData[] = {
+	GLfloat vertex_data[] = {
 		0.f, 0.8f, 0.f, -0.8f, -0.8f, 0.f, 0.8f, -0.8f, 0.f,
 		};
 
@@ -112,22 +114,16 @@ on_setup(
 
 	cont->program = cont->instance->add_shader_program(cont->shaders);
 
-	// TODO: turn this into a singleton operation
-	glGenVertexArrays(1, &cont->vao);
-	glBindVertexArray(cont->vao);
+	cont->vao = cont->instance->add_vertex(1);
+	cont->vbo = cont->instance->add_buffer(GL_ARRAY_BUFFER, 1);
+	cont->instance->set_buffer_data(GL_ARRAY_BUFFER, vertex_data, sizeof(vertex_data), GL_STATIC_DRAW);
 
-	glGenBuffers(1, &cont->vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, cont->vbo);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
-
-	attrib = cont->instance->shader_program_attribute(cont->program, "vert0");
+	attrib = cont->instance->shader_program_attribute(cont->program, "vert");
 	glEnableVertexAttribArray(attrib);
 	glVertexAttribPointer(attrib, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	// ---
+	cont->instance->bind_buffer(GL_ARRAY_BUFFER);
+	cont->instance->bind_vertex();
 
 exit:
 	return result;
@@ -166,12 +162,10 @@ on_teardown(
 		goto exit;
 	}
 
-	// TODO: turn this into a singleton operation
-	glDeleteBuffers(1, &cont->vbo);
+	cont->instance->remove_buffer(cont->vbo);
 	cont->vbo = SCALAR_INVALID(GLint);
-	glDeleteVertexArrays(1, &cont->vao);
+	cont->instance->remove_vertex(cont->vao);
 	cont->vao = SCALAR_INVALID(GLint);
-	// ---
 
 	cont->instance->remove_shader_program(cont->program);
 	cont->program = 0;

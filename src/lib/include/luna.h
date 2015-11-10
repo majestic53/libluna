@@ -40,6 +40,7 @@ using namespace LUNA;
 #include "luna_display.h"
 #include "luna_input.h"
 #include "luna_shader.h"
+#include "luna_vertex.h"
 
 using namespace LUNA::COMP;
 
@@ -226,6 +227,21 @@ namespace LUNA {
 
 			static _luna *acquire(void);
 
+			luna_display_ptr acquire_display(void);
+
+			luna_input_ptr acquire_input(void);
+
+			luna_shader_ptr acquire_shader(void);
+
+			luna_shader_program_ptr acquire_shader_program(void);
+
+			luna_vertex_ptr acquire_vertex(void);
+
+			GLuint add_buffer(
+				__in GLenum target,
+				__in size_t count
+				);
+
 			void add_event(
 				__in uint32_t type,
 				__in luna_evt_cb callback,
@@ -242,6 +258,23 @@ namespace LUNA {
 				__in const std::vector<GLuint> &ids
 				);
 
+			GLuint add_vertex(
+				__in size_t count
+				);
+
+			void bind_buffer(
+				__in GLenum target,
+				__in_opt GLuint id = 0
+				);
+
+			void bind_vertex(
+				__in_opt GLuint id = 0
+				);
+
+			size_t buffer_count(
+				__in GLuint id
+				);
+
 			void clear_draw(void);
 
 			void clear_events(void);
@@ -252,6 +285,12 @@ namespace LUNA {
 
 			void clear_tick(void);
 
+			void clear_vertex_buffer(void);
+
+			bool contains_buffer(
+				__in GLuint id
+				);
+
 			bool contains_event(
 				__in uint32_t type
 				);
@@ -261,6 +300,10 @@ namespace LUNA {
 				);
 
 			bool contains_shader_program(
+				__in GLuint id
+				);
+
+			bool contains_vertex(
 				__in GLuint id
 				);
 
@@ -278,6 +321,10 @@ namespace LUNA {
 
 			bool is_running(void);
 
+			void remove_buffer(
+				__in GLuint id
+				);
+
 			void remove_event(
 				__in uint32_t type
 				);
@@ -288,6 +335,17 @@ namespace LUNA {
 
 			void remove_shader_program(
 				__in GLuint id
+				);
+
+			void remove_vertex(
+				__in GLuint id
+				);
+
+			void set_buffer_data(
+				__in GLenum target,
+				__in const void *data,
+				__in size_t length,
+				__in GLenum usage
 				);
 
 			void set_draw(
@@ -336,7 +394,15 @@ namespace LUNA {
 
 			void uninitialize(void);
 
+			void use_shader_program(
+				__in_opt GLuint id = 0
+				);
+
 			static std::string version(void);
+
+			size_t vertex_count(
+				__in GLuint id
+				);
 
 		protected:
 
@@ -351,14 +417,6 @@ namespace LUNA {
 				);
 
 			static void _delete(void);
-
-			luna_display_ptr acquire_display(void);
-
-			luna_input_ptr acquire_input(void);
-
-			luna_shader_ptr acquire_shader(void);
-
-			luna_shader_program_ptr acquire_shader_program(void);
 
 			static void external_initialize(void);
 
@@ -391,6 +449,8 @@ namespace LUNA {
 			luna_shader_ptr m_instance_shader;
 
 			luna_shader_program_ptr m_instance_shader_program;
+
+			luna_vertex_ptr m_instance_vertex;
 
 			bool m_running;
 

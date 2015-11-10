@@ -434,7 +434,7 @@ namespace LUNA {
 			result = glGetAttribLocation(find(id)->first, (GLchar *) &name[0]);
 			if(result == SCALAR_INVALID(GLint)) {
 				THROW_LUNA_SHADER_EXCEPTION_FORMAT(LUNA_SHADER_EXCEPTION_EXTERNAL,
-					"%s", "glGetAttribLocation failed: Attribute %s", 
+					"glGetAttribLocation failed: Attribute %s", 
 					STRING_CHECK(name));
 			}
 
@@ -716,7 +716,7 @@ namespace LUNA {
 			result = glGetUniformLocation(find(id)->first, (GLchar *) &name[0]);
 			if(result == SCALAR_INVALID(GLint)) {
 				THROW_LUNA_SHADER_EXCEPTION_FORMAT(LUNA_SHADER_EXCEPTION_EXTERNAL,
-					"%s", "glGetUniformLocation failed: Uniform %s", 
+					"glGetUniformLocation failed: Uniform %s", 
 					STRING_CHECK(name));
 			}
 
@@ -733,6 +733,19 @@ namespace LUNA {
 
 			clear();
 			m_initialized = false;
+		}
+
+		void 
+		_luna_shader_program::use(
+			__in_opt GLuint id
+			)
+		{
+
+			if(!m_initialized) {
+				THROW_LUNA_SHADER_EXCEPTION(LUNA_SHADER_EXCEPTION_UNINITIALIZED);
+			}
+
+			glUseProgram(!id ? id : find(id)->first);
 		}
 	}
 }

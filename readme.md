@@ -13,6 +13,10 @@ Changelog
 =========
 
 ##Version 0.1.1545
+*Updated:11/9/2015*
+
+* Added support for buffer/vertex
+
 *Updated:11/8/2015*
 
 * Added support for opengl shader programs
